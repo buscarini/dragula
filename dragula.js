@@ -25,6 +25,7 @@ function dragula (initialContainers, options) {
   var _renderTimer; // timer for setTimeout renderMirrorImage
   var _lastDropTarget = null; // last container item was over
   var _grabbed; // holds mousedown context until first mousemove
+  var _delayTimer; // timer for the grab setTimeout
 
   var o = options || {};
   if (o.moves === void 0) { o.moves = always; }
@@ -39,6 +40,7 @@ function dragula (initialContainers, options) {
   if (o.direction === void 0) { o.direction = 'vertical'; }
   if (o.ignoreInputTextSelection === void 0) { o.ignoreInputTextSelection = true; }
   if (o.mirrorContainer === void 0) { o.mirrorContainer = doc.body; }
+  if (o.delay === void 0) { o.delay = 0; }
 
   var drake = emitter({
     containers: o.containers,
@@ -65,7 +67,8 @@ function dragula (initialContainers, options) {
 
   function events (remove) {
     var op = remove ? 'remove' : 'add';
-    touchy(documentElement, op, 'mousedown', grab);
+    touchy(documentElement, op, 'mousedown', delayedGrab);
+    // touchy(documentElement, op, 'mousedown', grab);
     touchy(documentElement, op, 'mouseup', release);
   }
 
@@ -89,6 +92,14 @@ function dragula (initialContainers, options) {
     if (_grabbed) {
       e.preventDefault();
     }
+  }
+
+  function delayedGrab(e) {
+ 	  function grabIt() {
+ 		  grab(e);
+ 	  }
+
+ 	  _delayTimer = setTimeout(grabIt, o.delay);
   }
 
   function grab (e) {
@@ -225,6 +236,7 @@ function dragula (initialContainers, options) {
   }
 
   function ungrab () {
+    clearTimeout(_delayTimer);
     _grabbed = false;
     eventualMovements(true);
     movements(true);
